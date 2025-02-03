@@ -1,0 +1,177 @@
+/* 기본 스타일 */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    background-color: #f4f4f9;
+    color: #333;
+}
+
+/* 헤더 스타일 */
+.header {
+    background-color:#333333;
+    color: white;
+    padding: 15px 20px;
+    position: fixed;
+    top: 0;
+    width: 100%;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 24px;
+}
+
+/* 메인 콘텐츠 */
+.main-content {
+    margin: 100px auto; /* 상단 여백을 추가하여 배너와 겹치지 않도록 설정 */
+    max-width: 1300px; /* 최대 너비 설정 */
+    padding: 30px; /* 내부 여백 추가 */
+}
+
+/* 사용자 목록 제목 스타일 */
+/* 사용자 목록 제목 스타일 */
+.main-content h2 {
+    font-size: 30px; /* 제목 크기 조정 */
+    margin-bottom: 20px; /* 제목과 테이블 간의 여백 */
+    text-align: center; /* 중앙 정렬 */
+    color: #333; /* 제목 색상 */
+    font-weight: bold; /* 제목 두께 */
+    letter-spacing: 1px; /* 글자 간격 조정 */
+    line-height: 1.4; /* 줄 높이 조정 */
+}
+/* 테이블 스타일 */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background-color: #ffffff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+table, th, td {
+    border: 1px solid #ddd;
+}
+
+th, td {
+    padding: 8px; /* 패딩을 줄여서 공간 최적화 */
+    text-align: center; /* 중앙 정렬 */
+    word-wrap: break-word; /* 긴 단어가 잘리도록 설정 */
+}
+
+th {
+    background-color: #f4f4f4;
+    color: #333;
+}
+/* 방문자 수 표시 스타일 */
+#visitCounter {
+    float: right; /* 오른쪽 정렬 */
+    margin-top: 10px; /* 상단 여백 */
+    font-size: 16px; /* 글자 크기 */
+    color: #333; /* 글자 색상 */
+    background-color: #f4f4f4; /* 배경 색상 */
+    border-radius: 8px; /* 둥근 모서리 */
+    padding: 15px 10px; /* 내부 여백 */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* 그림자 효과 */
+    margin-right: 80px; /* 오른쪽 여백을 줄임 */
+}
+/* 각 열의 너비 조정 */
+th:nth-child(1), td:nth-child(1) { width: 15%; } /* 계정명 */
+th:nth-child(2), td:nth-child(2) { width: 20%; } /* 비밀번호 */
+th:nth-child(3), td:nth-child(3) { width: 10%; } /* 이름 */
+th:nth-child(4), td:nth-child(4) { width: 10%; } /* 성별 */
+th:nth-child(5), td:nth-child(5) { width: 10%; } /* 생년월일 */
+th:nth-child(6), td:nth-child(6) { width: 10%; } /* 전화번호 */
+th:nth-child(7), td:nth-child(7) { width: 15%; } /* 이메일 */
+th:nth-child(8), td:nth-child(8) { width: 10%; } /* 계정 생성일 */
+
+td a {
+    color: #000; /* 기본 글씨 색상 검은색 */
+    text-decoration: none; /* 기본 밑줄 제거 */
+}
+
+td a:hover {
+    color: #3498db; /* 마우스 오버 시 파란색 */
+    text-decoration: underline; /* 마우스 오버 시 밑줄 추가 */
+}
+
+/* 사용자 수정 폼 스타일 */
+.main-editcontent {
+    max-width: 600px; /* 최대 너비 설정 */
+    margin: 20px auto; /* 중앙 정렬 */
+    padding: 20px; /* 내부 여백 */
+    border: 1px solid #ddd; /* 테두리 */
+    border-radius: 8px; /* 둥근 모서리 */
+    background-color: #f9f9f9; /* 배경 색상 */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* 그림자 효과 */
+}
+
+h2 {
+    text-align: center; /* 제목 중앙 정렬 */
+    color: #333; /* 제목 색상 */
+}
+
+label {
+    display: block; /* 블록 요소로 설정 */
+    margin-bottom: 5px; /* 아래 여백 */
+    font-weight: bold; /* 글씨 두께 */
+}
+
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="date"] {
+    width: 96%; /* 너비 100% */
+    padding: 10px; /* 내부 여백 */
+    margin-bottom: 15px; /* 아래 여백 */
+    border: 1px solid #ccc; /* 테두리 */
+    border-radius: 4px; /* 둥근 모서리 */
+}
+
+button {
+    width: 100%; /* 버튼 너비 100% */
+    padding: 10px; /* 내부 여백 */
+    background-color: #007bff; /* 배경 색상 */
+    color: white; /* 글씨 색상 */
+    border: none; /* 테두리 없음 */
+    border-radius: 4px; /* 둥근 모서리 */
+    cursor: pointer; /* 커서 포인터 */
+}
+
+button:hover {
+    background-color: #0056b3; /* 마우스 오버 시 색상 변경 */
+}
+
+.head-ber {
+    background-color: #333333;
+}
+
+/* 비밀번호 변경 폼 스타일 */
+form.password-change-form {
+    display: flex; /* 수평 정렬 */
+    align-items: center; /* 세로 가운데 정렬 */
+    justify-content: center; /* 내용 가운데 정렬 */
+    gap: 10px; /* 필드 간 간격 */
+}
+
+form.password-change-form input[type="password"] {
+    width: 60%; /* 입력 필드 너비 */
+    padding: 6px; /* 입력 필드 내부 여백 */
+    border: 1px solid #ccc; /* 입력 필드 테두리 */
+    border-radius: 4px; /* 둥근 모서리 */
+}
+
+form.password-change-form button {
+    padding: 6px 10px; /* 버튼 크기 조정 */
+    background-color: #007bff; /* 버튼 색상 */
+    color: white; /* 버튼 글자 색상 */
+    border: none; /* 버튼 테두리 제거 */
+    border-radius: 4px; /* 버튼 둥근 모서리 */
+    cursor: pointer; /* 포인터 커서 */
+    transition: background-color 0.3s ease; /* 호버 효과 부드럽게 */
+}
+
+form.password-change-form button:hover {
+    background-color: #0056b3; /* 마우스 오버 시 색상 */
+}

@@ -1,0 +1,207 @@
+<?php
+require_once('../config.php');
+session_start();
+
+// 로그인 체크
+if (!isset($_SESSION['username'])) {
+    header("Location: ../login.php");
+    exit();
+}
+
+// POST 요청 처리
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $title = $_POST['title'];
+    $content = $_POST['content'];
+    $author = $_SESSION['username'];
+    $board_type = $_POST['board_type'];
+
+    // 게시판이 선택되지 않았을 경우
+    if ($board_type === '') {
+        echo "<script>
+            alert('게시판을 선택해주세요.');
+            history.back();
+        </script>";
+        exit();
+    }
+
+    // 공지사항 게시판에 글을 쓰려고 할 때 관리자 체크
+    if ($board_type === 'notice') {
+        $stmt = $conn->prepare("SELECT Admin_set FROM users WHERE username = ?");
+        $stmt->bind_param("s", $author);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $user = $result->fetch_assoc();
+
+        // Admin_set 값 확인
+        if ($user['Admin_set'] !== '001') {
+            echo "<script>
+                alert('공지사항은 관리자만 작성할 수 있습니다.');
+                window.location.href = 'games.php?type=community';
+            </script>";
+            exit();
+        }
+    }
+
+    // 파일 업로드 처리
+    $file_name = null;
+
+    // 1. 외부 URL을 통한 파일 업로드 처리
+    if (isset($_POST['file_url']) && filter_var($_POST['file_url'], FILTER_VALIDATE_URL)) {
+        $file_url = $_POST['file_url'];
+        $file_name = basename($file_url);
+
+        // 외부 URL에서 파일 다운로드
+        $file_content = file_get_contents($file_url);
+
+        if ($file_content !== false) {
+            $upload_dir = '../uploads/images/';
+            if (!file_exists($upload_dir)) {
+                mkdir($upload_dir, 0777, true);
+            }
+
+            // 다운로드한 파일을 서버에 저장
+            file_put_contents($upload_dir . $file_name, $file_content);
+        } else {
+            echo "<script>alert('파일을 가져오는데 실패했습니다.'); history.back();</script>";
+            exit();
+        }
+    }
+
+    // 2. 직접 파일 업로드 처리
+    if (isset($_FILES['upload_file']) && $_FILES['upload_file']['error'] === UPLOAD_ERR_OK) {
+        $file = $_FILES['upload_file'];
+        $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf', 'application/msword', 
+                         'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+        $max_size = 5 * 1024 * 1024; // 5MB
+
+        // 파일 타입 체크
+        if (!in_array($file['type'], $allowed_types)) {
+            echo "<script>
+                alert('허용되지 않는 파일 형식입니다. (jpg, png, gif, pdf, doc, docx만 가능)');
+                history.back();
+            </script>";
+            exit();
+        }
+
+        // 파일 크기 체크
+        if ($file['size'] > $max_size) {
+            echo "<script>
+                alert('파일 크기는 5MB를 초과할 수 없습니다.');
+                history.back();
+            </script>";
+            exit();
+        }
+
+        $file_name = time() . '_' . basename($file['name']);
+        if (move_uploaded_file($file['tmp_name'], $upload_dir . $file_name)) {
+            // 파일이 성공적으로 업로드된 경우
+            // 데이터베이스에 파일 이름 저장 등의 추가 작업을 여기에 추가할 수 있습니다.
+        } else {
+            echo "<script>alert('파일 업로드에 실패했습니다. 임시 파일: " . $file['tmp_name'] . "'); history.back();</script>";
+            exit();
+        }
+    } else {
+        echo "<script>alert('파일 업로드 중 오류가 발생했습니다. 오류 코드: " . $_FILES['upload_file']['error'] . "'); history.back();</script>";
+        exit();
+    }
+    
+    // 게시물 저장
+    $stmt = $conn->prepare("INSERT INTO posts (title, content, author, board_type, file_name, created_at) VALUES (?, ?, ?, ?, ?, NOW())");
+    $stmt->bind_param("sssss", $title, $content, $author, $board_type, $file_name);
+    
+    if ($stmt->execute()) {
+        // 성공 메시지를 위한 쿠키 설정
+        setcookie('post_created', 'true', time() + 3600, '/');
+        header("Location: games.php?type=" . $board_type);
+        exit();
+    } else {
+        echo "게시물 작성에 실패했습니다. 에러: " . $conn->error;
+    }
+}
+
+// 게시판 타입 가져오기
+$board_type = isset($_GET['type']) ? $_GET['type'] : '';
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>게시물 작성</title>
+    <link rel="stylesheet" href="styles.css">
+    <script>
+    function validateFile(input) {
+        const maxSize = 5 * 1024 * 1024; // 5MB
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf', 'application/msword', 
+                            'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+        
+        if (input.files[0]) {
+            if (input.files[0].size > maxSize) {
+                alert('파일 크기는 5MB를 초과할 수 없습니다.');
+                input.value = '';
+                return false;
+            }
+            
+            if (!allowedTypes.includes(input.files[0].type)) {
+                alert('허용되지 않는 파일 형식입니다. (jpg, png, gif, pdf, doc, docx만 가능)');
+                input.value = '';
+                return false;
+            }
+        }
+        return true;
+    }
+    </script>
+</head>
+<body>
+    <div id="board" class="edit-page">
+        <header>
+            <h2>게시물 작성</h2>
+        </header>
+
+        <form method="post" action="write.php" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="title">제목:</label>
+                <input type="text" id="title" name="title" maxlength="30" required>
+            </div>
+
+            <div class="form-group">
+                <label for="content">내용:</label>
+                <textarea id="content" name="content" required></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="author">작성자:</label>
+                <input type="text" id="author" name="author" value="<?php echo $_SESSION['username']; ?>" readonly>
+            </div>
+
+            <div class="form-group">
+                <label for="board_type">게시판 선택:</label>
+                <select id="board_type" name="board_type">
+                    <option value="">-- 목록 --</option>
+                    <option value="community">커뮤니티</option>
+                    <option value="notice">공지사항</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="upload_file">파일 첨부:</label>
+                <input type="file" id="upload_file" name="upload_file" onchange="validateFile(this)">
+                <small>* 허용 파일: jpg, png, gif, pdf, doc, docx (최대 5MB)</small>
+            </div>
+
+            <div class="form-group">
+                <label for="file_url">파일 URL:</label>
+                <input type="url" id="file_url" name="file_url" placeholder="http://example.com/file.png">
+                <small>* URL에서 직접 파일을 가져옵니다.</small>
+            </div>
+
+            <div class="button-container">
+                <a href="games.php?type=<?php echo $board_type; ?>" class="btn">목록으로</a>
+                <button type="submit">작성하기</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>
+

