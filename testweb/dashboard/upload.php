@@ -24,6 +24,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // 파일 업로드 처리
+    // URL을 통한 파일 다운로드 부분
+if (isset($_POST['file_url'])) {
+    $file_url = $_POST['file_url'];
+    $fileName = basename($file_url);  // URL에서 파일명 추출
+    $uploadFileDir = '../uploads/images/';
+    
+    // URL에서 파일을 가져오기
+    $fileContent = file_get_contents($file_url);  // URL에서 파일 콘텐츠 가져오기
+
+    // 파일이 정상적으로 다운로드되었는지 확인
+    if ($fileContent === false) {
+        echo "<script>alert('업로드를 할 URL이 없습니다.');</script>";
+    } else {
+        // 파일을 서버에 저장
+        $filePath = $uploadFileDir . $fileName;
+        file_put_contents($filePath, $fileContent);  // 파일을 저장
+
+        echo "<script>alert('파일이 성공적으로 업로드되었습니다.');</script>";
+    }
+}
     $fileName = null; // 파일 이름 초기화
     if (isset($_FILES['upload_file']) && $_FILES['upload_file']['error'] === UPLOAD_ERR_OK) {
         $fileTmpPath = $_FILES['upload_file']['tmp_name'];

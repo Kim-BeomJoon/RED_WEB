@@ -6,7 +6,7 @@ require_once('../config.php');
 $board_type = isset($_GET['type']) ? $_GET['type'] : 'community';
 
 // 페이지네이션 설정
-$limit = 5; // 한 페이지에 보여줄 게시물 수
+$limit = 10; // 한 페이지에 보여줄 게시물 수
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $offset = ($page - 1) * $limit;
 
@@ -16,49 +16,90 @@ $search = isset($_GET['search']) ? $_GET['search'] : '';
 // 게시물 삭제 처리
 if (isset($_GET['delete_id'])) {
     $deleteID = $_GET['delete_id'];
-    $deleteQuery = "DELETE FROM posts WHERE post_id = ?";
-    $stmt = $conn->prepare($deleteQuery);
-    $stmt->bind_param("i", $deleteID);
     
-    echo "<script>
-        if(confirm('정말 이 게시물을 삭제하시겠습니까?')) {";
+    // 현재 사용자의 Admin_set 확인
+    $adminCheck = "SELECT Admin_set FROM users WHERE username = '$_SESSION[username]'";
+    $adminResult = $conn->query($adminCheck);
+    $adminRow = $adminResult->fetch_assoc();
     
-    if ($stmt->execute()) {
-        echo "
-            alert('게시물이 성공적으로 삭제되었습니다.');
-            window.location.href = 'games.php?type=" . $board_type . "';";
-    } else {
-        echo "
-            alert('게시물 삭제에 실패했습니다. 에러: " . $conn->error . "');
-            window.location.href = 'games.php?type=" . $board_type . "';";
-    }
+    // 게시물 작성자 확인
+    $postCheck = "SELECT author FROM posts WHERE post_id = $deleteID";
+    $postResult = $conn->query($postCheck);
+    $postRow = $postResult->fetch_assoc();
     
-
-    
-    echo "
+    // 관리자이거나 작성자인 경우 삭제 허용
+    if ($adminRow['Admin_set'] == '001' || $postRow['author'] == $_SESSION['username']) {
+        $deleteQuery = "DELETE FROM posts WHERE post_id = $deleteID";
+        
+        echo "<script>
+            if(confirm('정말 이 게시물을 삭제하시겠습니까?')) {";
+        
+        if ($conn->query($deleteQuery)) {
+            echo "
+                alert('게시물이 성공적으로 삭제되었습니다.');
+                window.location.href = 'games.php?type=" . $board_type . "';";
         } else {
-            window.location.href = 'games.php?type=" . $board_type . "';
+            echo "
+                alert('게시물 삭제에 실패했습니다.');
+                window.location.href = 'games.php?type=" . $board_type . "';";
         }
-    </script>";
+        
+        echo "
+            } else {
+                window.location.href = 'games.php?type=" . $board_type . "';
+            }
+        </script>";
+    } else {
+        echo "<script>
+            alert('삭제 권한이 없습니다.');
+            window.location.href = 'games.php?type=" . $board_type . "';
+        </script>";
+    }
     exit();
 }
 
 // 게시물 조회
-$totalQuery = "SELECT COUNT(*) as total FROM posts WHERE board_type = ? AND (title LIKE ? OR content LIKE ?)";
-$searchTerm = '%' . $search . '%';
-$stmt = $conn->prepare($totalQuery);
-$stmt->bind_param("sss", $board_type, $searchTerm, $searchTerm);
-$stmt->execute();
-$totalResult = $stmt->get_result();
+// $totalQuery = "SELECT COUNT(*) as total FROM posts WHERE board_type = ? AND (title LIKE ? OR content LIKE ?)";
+// $searchTerm = '%' . $search . '%';
+// $stmt = $conn->prepare($totalQuery);
+// $stmt->bind_param("sss", $board_type, $searchTerm, $searchTerm);
+// $stmt->execute();
+// $totalResult = $stmt->get_result();
+// $totalRow = $totalResult->fetch_assoc();
+// $totalPosts = $totalRow['total'];
+// $totalPages = ceil($totalPosts / $limit);
+
+// $query = "SELECT p.*, u.nickname FROM posts p JOIN users u ON p.author = u.username WHERE p.board_type = ? AND (p.title LIKE ? OR p.content LIKE ?) ORDER BY p.created_at DESC LIMIT ? OFFSET ?";
+// $stmt = $conn->prepare($query);
+// $stmt->bind_param("ssiii", $board_type, $searchTerm, $searchTerm, $limit, $offset);
+// $stmt->execute();
+// $result = $stmt->get_result();
+
+$sql = "SELECT SQL_CALC_FOUND_ROWS p.*, u.nickname FROM posts p JOIN users u ON p.author = u.username WHERE p.board_type = '$board_type' AND (p.title LIKE '%$search%' OR p.content LIKE '%$search%') ORDER BY p.created_at DESC LIMIT $limit OFFSET $offset";
+$result = $conn->query($sql);
+
+
+
+// $postsArray = array();
+// if ($result->num_rows > 0) {
+//     while($row = $result->fetch_assoc()) {
+//         $postsArray[] = $row;
+//     }
+// }
+
+// echo "<pre>";
+// var_dump($postsArray);
+// echo "</pre>";
+
+// 페이지네이션
+$totalQuery = "SELECT FOUND_ROWS() as total";
+$totalResult = $conn->query($totalQuery);
 $totalRow = $totalResult->fetch_assoc();
 $totalPosts = $totalRow['total'];
 $totalPages = ceil($totalPosts / $limit);
 
-$query = "SELECT p.*, u.nickname FROM posts p JOIN users u ON p.author = u.username WHERE p.board_type = ? AND (p.title LIKE ? OR p.content LIKE ?) ORDER BY p.created_at DESC LIMIT ? OFFSET ?";
-$stmt = $conn->prepare($query);
-$stmt->bind_param("ssiii", $board_type, $searchTerm, $searchTerm, $limit, $offset);
-$stmt->execute();
-$result = $stmt->get_result();
+
+
 
 // 게시물 작성 여부를 확인하는 쿠키가 존재하는지 검사
 if (isset($_COOKIE['post_created']) && $_COOKIE['post_created'] === 'true') {
@@ -93,7 +134,10 @@ if ($conn->connect_error) {
 
 <div id="board">
     <header>
-    <img src="../images/home_name.png" alt="Good Game Maker" style="max-height: 100px;">
+        <a href="../index.php">
+            <img src="../images/home_name.png" alt="Good Game Maker" style="max-height: 100px;">
+        </a>
+    <!-- <img id="home-img" src="../images/home_name.png" alt="Good Game Maker" style="max-height: 100px;"> -->
 
         <!-- 게시판 선택 버튼 추가 -->
         <div class="board-type-buttons">
@@ -102,7 +146,7 @@ if ($conn->connect_error) {
         </div>
         <form method="get" action="games.php" class="search-form">
             <input type="hidden" name="type" value="<?php echo $board_type; ?>">
-            <input type="text" name="search" placeholder="검색어를 입력하세요" value="<?php echo htmlspecialchars($search); ?>" required>
+            <input type="text" name="search" placeholder="검색어를 입력하세요" value="<?php echo $search; ?>" required>
             <button type="submit">검색</button>
         </form>
     </header>
@@ -129,7 +173,12 @@ if ($conn->connect_error) {
                     echo "<td>{$row['created_at']}</td>";
                     echo "<td>{$row['views']}</td>";
                     echo "<td>";
-                    if ($row['author'] === $_SESSION['username']):
+                    // 관리자이거나 작성자인 경우 삭제 버튼 표시
+                    $adminCheck = "SELECT Admin_set FROM users WHERE username = '$_SESSION[username]'";
+                    $adminResult = $conn->query($adminCheck);
+                    $adminRow = $adminResult->fetch_assoc();
+                    
+                    if ($adminRow['Admin_set'] == '001' || $row['author'] === $_SESSION['username']):
                         echo "<a href='javascript:void(0)' onclick='confirmDelete({$row['post_id']}, \"$board_type\")'>삭제</a>";
                     else:
                         echo "<span>삭제 불가</span>";

